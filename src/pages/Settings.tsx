@@ -1,0 +1,334 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import { useTheme } from "@/components/theme-provider"
+import { 
+  User, 
+  Bell, 
+  Shield, 
+  Palette,
+  Save,
+  Trash2,
+  Key,
+  Mail,
+  Slack,
+  Github
+} from "lucide-react"
+
+export default function Settings() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your account preferences and application settings
+          </p>
+        </div>
+
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" className="space-y-6">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Profile Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" defaultValue="John" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" defaultValue="Developer" />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" type="email" defaultValue="developer@aolda.cloud" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input id="company" defaultValue="Aolda Technologies" />
+                </div>
+
+                <Button variant="hero">
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Github className="h-5 w-5" />
+                  Connected Accounts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Github className="h-5 w-5" />
+                    <div>
+                      <p className="font-medium">GitHub</p>
+                      <p className="text-sm text-muted-foreground">john-developer</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Disconnect
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border border-dashed border-border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Slack className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-muted-foreground">Slack</p>
+                      <p className="text-sm text-muted-foreground">Not connected</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Connect
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-6">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notification Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Email Notifications</p>
+                      <p className="text-sm text-muted-foreground">
+                        Receive deployment status updates via email
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Deployment Success</p>
+                      <p className="text-sm text-muted-foreground">
+                        Notify when deployments complete successfully
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Deployment Failures</p>
+                      <p className="text-sm text-muted-foreground">
+                        Notify when deployments fail
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Resource Alerts</p>
+                      <p className="text-sm text-muted-foreground">
+                        Notify when resource usage exceeds thresholds
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Weekly Reports</p>
+                      <p className="text-sm text-muted-foreground">
+                        Receive weekly deployment summary reports
+                      </p>
+                    </div>
+                    <Switch />
+                  </div>
+                </div>
+
+                <Button variant="hero">
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Preferences
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Security Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Change Password</h3>
+                    <div className="space-y-3">
+                      <Input type="password" placeholder="Current password" />
+                      <Input type="password" placeholder="New password" />
+                      <Input type="password" placeholder="Confirm new password" />
+                      <Button variant="outline">
+                        Update Password
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Two-Factor Authentication</p>
+                      <p className="text-sm text-muted-foreground">
+                        Add an extra layer of security to your account
+                      </p>
+                    </div>
+                    <Switch />
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2 flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      API Keys
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Manage API keys for external integrations
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium font-mono">aolda_*****************************</p>
+                          <p className="text-sm text-muted-foreground">Created 2 days ago</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button variant="outline">
+                        Generate New Key
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="space-y-6">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="font-medium mb-4">Theme</h3>
+                  <div className="grid gap-3">
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-smooth ${
+                        theme === "light" ? "border-primary bg-primary/5" : "border-border"
+                      }`}
+                      onClick={() => setTheme("light")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-300"></div>
+                        <div>
+                          <p className="font-medium">Light</p>
+                          <p className="text-sm text-muted-foreground">Clean and bright interface</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-smooth ${
+                        theme === "dark" ? "border-primary bg-primary/5" : "border-border"
+                      }`}
+                      onClick={() => setTheme("dark")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-gray-800 border-2 border-gray-600"></div>
+                        <div>
+                          <p className="font-medium">Dark</p>
+                          <p className="text-sm text-muted-foreground">Easy on the eyes in low light</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-smooth ${
+                        theme === "system" ? "border-primary bg-primary/5" : "border-border"
+                      }`}
+                      onClick={() => setTheme("system")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-gradient-to-r from-white to-gray-800 border-2 border-gray-400"></div>
+                        <div>
+                          <p className="font-medium">System</p>
+                          <p className="text-sm text-muted-foreground">Follows your system preference</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Compact Mode</p>
+                    <p className="text-sm text-muted-foreground">
+                      Reduce spacing and padding for more content
+                    </p>
+                  </div>
+                  <Switch />
+                </div>
+
+                <Button variant="hero">
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Preferences
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  )
+}
