@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { MetricCard } from "@/components/metric-card"
 import { ActivityLog } from "@/components/activity-log"
 import { ResourceChart } from "@/components/resource-chart"
@@ -11,8 +12,41 @@ import {
   RefreshCw 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { api } from '@/lib/api'
+import { useToast } from "@/hooks/use-toast"
 
 const Index = () => {
+  const [predictions, setPredictions] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+
+  const handlePredict = async () => {
+    setIsLoading(true)
+    try {
+      // 더미 데이터 생성 (실제로는 실제 데이터 사용)
+      const dummySequence = Array(24).fill(0).map(() => 
+        Array(10).fill(0).map(() => Math.random() * 100)
+      )
+      
+      const result = await api.predict24h(dummySequence, 'peak')
+      setPredictions(result)
+      toast({
+        title: "예측 성공",
+        description: "24시간 예측이 완료되었습니다.",
+      })
+    } catch (error) {
+      console.error('예측 실패:', error)
+      toast({
+        title: "예측 실패",
+        description: "예측 중 오류가 발생했습니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -46,10 +80,16 @@ const Index = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
-            <Button variant="outline" size="sm">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handlePredict} disabled={isLoading}>
+                <Zap className="mr-2 h-4 w-4" />
+                {isLoading ? '예측 중...' : '24시간 예측'}
+              </Button>
+              <Button variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -79,6 +119,23 @@ const Index = () => {
             />
           </div>
         </div>
+
+        {/* Prediction Results */}
+        {predictions && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>24시간 예측 결과</CardTitle>
+                <CardDescription>최근 예측 데이터</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-96 text-sm">
+                  {JSON.stringify(predictions, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Resource Monitoring */}
         <div className="mb-8">
