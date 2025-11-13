@@ -12,7 +12,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "@/contexts/AuthContext"
+import { mcpApi } from "@/lib/mcpAPI"
+import { useToast } from "@/hooks/use-toast"
 import { 
   Plus, 
   Search, 
@@ -24,7 +38,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from "lucide-react"
 import { Link } from "react-router-dom"
 
@@ -35,6 +50,8 @@ interface Project {
   status: "deployed" | "building" | "error" | "stopped"
   lastDeployment: string
   url?: string
+  service_id?: string  // MCP service_id
+  instance_id?: string  // 배포된 인스턴스 ID
 }
 
 const mockProjects: Project[] = [
@@ -44,7 +61,9 @@ const mockProjects: Project[] = [
     repository: "https://github.com/company/ecommerce-api",
     status: "deployed",
     lastDeployment: "2 hours ago",
-    url: "https://api.ecommerce.LaunchA.cloud"
+    url: "https://api.ecommerce.LaunchA.cloud",
+    service_id: "svc-1",
+    instance_id: "vm-123456"
   },
   {
     id: "2",
@@ -86,9 +105,12 @@ const mockProjects: Project[] = [
 ]
 
 export default function Projects() {
+  const { state } = useAuth()
+  const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [newProject, setNewProject] = useState({ name: "", repository: "" })
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
 
   const filteredProjects = mockProjects.filter(project =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,6 +151,51 @@ export default function Projects() {
     console.log("Creating project:", newProject)
     setIsCreateDialogOpen(false)
     setNewProject({ name: "", repository: "" })
+  }
+
+  const handleDestroyProject = async (project: Project) => {
+    if (!state.token) {
+      toast({
+        title: "오류",
+        description: "인증 토큰이 없습니다. 다시 로그인해주세요.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!project.service_id || !project.instance_id) {
+      toast({
+        title: "오류",
+        description: "프로젝트 정보가 불완전합니다. service_id 또는 instance_id가 없습니다.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsDeleting(project.id)
+    try {
+      await mcpApi.destroy(
+        {
+          service_id: project.service_id,
+          instance_id: project.instance_id,
+        },
+        state.token
+      )
+      toast({
+        title: "프로젝트 삭제 완료",
+        description: `${project.name} 프로젝트가 성공적으로 삭제되었습니다.`,
+      })
+      // TODO: 실제로는 프로젝트 목록에서 제거하거나 상태를 업데이트해야 함
+      // 현재는 목 데이터이므로 UI에서만 제거하는 로직을 추가할 수 있음
+    } catch (err: any) {
+      toast({
+        title: "프로젝트 삭제 실패",
+        description: err.message || "프로젝트 삭제에 실패했습니다.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeleting(null)
+    }
   }
 
   return (
@@ -255,6 +322,43 @@ export default function Projects() {
                   </Link>
                 </Button>
               </div>
+
+              {project.service_id && project.instance_id && (
+                <div className="pt-2 border-t border-border">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="w-full"
+                        disabled={isDeleting === project.id}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {isDeleting === project.id ? "삭제 중..." : "프로젝트 삭제"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>프로젝트를 삭제하시겠습니까?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          이 작업은 되돌릴 수 없습니다. 프로젝트와 모든 관련 리소스가 영구적으로 삭제됩니다.
+                          <br />
+                          <strong>{project.name}</strong> 프로젝트를 삭제하시겠습니까?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDestroyProject(project)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          삭제
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

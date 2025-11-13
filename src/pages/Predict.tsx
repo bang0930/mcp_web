@@ -41,8 +41,7 @@ export default function Predict() {
         // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight 등)은 MCP가 채움
       }
 
-      // 3. MCP API로 Context JSON 전송
-      // 배포는 MCP -> mcp_core -> CI/CD로 자동 처리됨
+      // 3. MCP API로 Context JSON 전송 (예측 요청)
       const payload = {
         service_id: serviceId,
         metric_name: "cpu_usage",
@@ -50,11 +49,21 @@ export default function Predict() {
       }
 
       // Context JSON을 예쁘게 포장해서 MCP로 전송
-      await mcpApi.sendContextToMCP(payload, state.token)
+      const planResponse = await mcpApi.sendContextToMCP(payload, state.token)
+
+      // 4. 배포 요청
+      const deployData = {
+        service_id: serviceId,
+        repo_id: projectData.github_repo_url, // GitHub URL을 repo_id로 사용
+        image_tag: "latest",
+        env_config: {},
+      }
+
+      const deployResponse = await mcpApi.deploy(deployData, state.token)
       
       toast({
-        title: "프로젝트 생성 완료",
-        description: "프로젝트 정보가 MCP로 전송되었습니다. 자동 배포가 시작됩니다.",
+        title: "프로젝트 생성 및 배포 완료",
+        description: `프로젝트 정보가 MCP로 전송되었고 배포가 시작되었습니다. Instance ID: ${deployResponse.instance_id || "N/A"}`,
       })
     } catch (err: any) {
       throw new Error(err.message || "프로젝트 생성에 실패했습니다.")

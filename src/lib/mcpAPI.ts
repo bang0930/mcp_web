@@ -48,5 +48,39 @@ export const mcpApi = {
       body: JSON.stringify(formattedPayload, null, 2) // 예쁘게 포장된 JSON
     });
     return handleResponse(res);
+  },
+
+  // 배포 요청
+  deploy: async (deployData: {
+    service_id: string;
+    repo_id?: string;
+    image_tag?: string;
+    env_config?: Record<string, any>;
+  }, token: string) => {
+    const res = await fetch(`${API_BASE_URL}/deploy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(deployData)
+    });
+    return handleResponse(res);
+  },
+
+  // 리소스 삭제
+  destroy: async (destroyData: {
+    service_id: string;
+    instance_id: string;
+  }, token: string) => {
+    const res = await fetch(`${API_BASE_URL}/destroy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(destroyData)
+    });
+    return handleResponse(res);
   }
 };

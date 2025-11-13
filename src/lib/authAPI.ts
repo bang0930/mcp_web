@@ -36,14 +36,10 @@ export const authApi = {
   },
 
   // 프로젝트 정보 업데이트 (사용자 정보 업데이트)
-  // TODO: 백엔드에 사용자 정보 업데이트 API가 추가되면 해당 엔드포인트로 변경
   updateProject: async (projectData: {
     github_repo_url: string;
     expected_users: number;
   }, token: string) => {
-    // 현재는 백엔드에 프로젝트 업데이트 API가 없으므로
-    // 로컬 스토리지에 저장하거나, 백엔드 API가 추가되면 해당 엔드포인트 사용
-    // 예: PUT /auth/profile 또는 PUT /user/project
     const res = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PUT',
       headers: {
@@ -51,6 +47,17 @@ export const authApi = {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(projectData)
+    });
+    return handleResponse(res);
+  },
+
+  // 회원 탈퇴
+  deleteAccount: async (token: string) => {
+    const res = await fetch(`${API_BASE_URL}/auth/delete`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     return handleResponse(res);
   }

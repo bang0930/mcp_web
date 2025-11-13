@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -5,7 +7,21 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useTheme } from "@/components/theme-provider"
+import { useAuth } from "@/contexts/AuthContext"
+import { authApi } from "@/lib/authAPI"
+import { useToast } from "@/hooks/use-toast"
 import { 
   User, 
   Bell, 
@@ -21,6 +37,40 @@ import {
 
 export default function Settings() {
   const { theme, setTheme } = useTheme()
+  const { state, logout } = useAuth()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    if (!state.token) {
+      toast({
+        title: "오류",
+        description: "인증 토큰이 없습니다. 다시 로그인해주세요.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await authApi.deleteAccount(state.token)
+      toast({
+        title: "계정 삭제 완료",
+        description: "계정이 성공적으로 삭제되었습니다.",
+      })
+      logout()
+      navigate("/login")
+    } catch (err: any) {
+      toast({
+        title: "계정 삭제 실패",
+        description: err.message || "계정 삭제에 실패했습니다.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -245,6 +295,40 @@ export default function Settings() {
                         Generate New Key
                       </Button>
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2 text-destructive">Danger Zone</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                    </p>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isDeleting}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {isDeleting ? "삭제 중..." : "계정 삭제"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>정말 계정을 삭제하시겠습니까?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            이 작업은 되돌릴 수 없습니다. 계정과 모든 관련 데이터가 영구적으로 삭제됩니다.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>취소</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteAccount}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            삭제
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </CardContent>
