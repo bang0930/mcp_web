@@ -30,22 +30,22 @@ export default function Predict() {
       }
 
       // 2. Context JSON 생성
-      // 프론트엔드에서는 GitHub URL과 예상 사용자 수만 전달
-      // 나머지 context 필드들(service_type, runtime_env, time_slot, weight 등)은 MCP가 채움
+      // 프론트엔드에서는 GitHub URL만 전달하고, 나머지 context 필드들은 MCP가 채움
       const serviceId = `svc-${Date.now()}`
 
       // 최소한의 Context 정보만 전달 (MCP가 나머지를 채움)
       const context = {
         github_url: projectData.github_repo_url, // 필수: GitHub URL
-        expected_users: projectData.expected_users, // 예상 사용자 수
-        // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight 등)은 MCP가 채움
+        // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight, expected_users 등)은 MCP가 채움
       }
 
       // 3. MCP API로 Context JSON 전송 (예측 요청)
+      // 자연어 요청사항은 별도 필드로 전송
       const payload = {
         service_id: serviceId,
         metric_name: "cpu_usage",
         context: context,
+        requirements: projectData.requirements, // 자연어 요청사항 (string으로 래핑)
       }
 
       // Context JSON을 예쁘게 포장해서 MCP로 전송

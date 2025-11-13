@@ -27,16 +27,16 @@ export const mcpApi = {
   // 배포는 MCP -> mcp_core -> CI/CD로 자동 처리됨
   sendContextToMCP: async (payload: any, token: string) => {
     // Context JSON을 예쁘게 포장해서 MCP로 전송
-    // 프론트엔드에서는 GitHub URL과 예상 사용자 수만 전달
-    // 나머지 필드들은 MCP가 자동으로 채움
+    // 프론트엔드에서는 GitHub URL만 전달하고, 나머지 필드들은 MCP가 자동으로 채움
+    // 자연어 요청사항은 별도 필드로 전송
     const formattedPayload = {
       service_id: payload.service_id,
       metric_name: payload.metric_name,
       context: {
         github_url: payload.context.github_url,
-        expected_users: payload.context.expected_users,
-        // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight, region, curr_cpu, curr_mem)은 MCP가 채움
+        // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight, region, curr_cpu, curr_mem, expected_users)은 MCP가 채움
       },
+      requirements: payload.requirements, // 자연어 요청사항 (string으로 래핑)
     }
 
     const res = await fetch(`${API_BASE_URL}/plans`, {

@@ -38,7 +38,7 @@ export const authApi = {
   // 프로젝트 정보 업데이트 (사용자 정보 업데이트)
   updateProject: async (projectData: {
     github_repo_url: string;
-    expected_users: number;
+    requirements: string;
   }, token: string) => {
     const res = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PUT',

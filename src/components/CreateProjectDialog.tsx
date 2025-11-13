@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -21,22 +22,22 @@ interface CreateProjectDialogProps {
 
 export interface ProjectData {
   github_repo_url: string
-  expected_users: number
+  requirements: string // 자연어 요청사항
 }
 
 export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProjectDialogProps) {
   const [formData, setFormData] = useState<ProjectData>({
     github_repo_url: "",
-    expected_users: 100,
+    requirements: "",
   })
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "expected_users" ? parseInt(value, 10) || 0 : value,
+      [name]: value,
     }))
   }
 
@@ -50,7 +51,7 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
       // 성공 시 폼 초기화 및 다이얼로그 닫기
       setFormData({
         github_repo_url: "",
-        expected_users: 100,
+        requirements: "",
       })
       onOpenChange(false)
     } catch (err: any) {
@@ -85,18 +86,21 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="expected_users">예상 사용자 수</Label>
-              <Input
-                id="expected_users"
-                name="expected_users"
-                type="number"
-                min="0"
-                placeholder="100"
-                value={formData.expected_users}
+              <Label htmlFor="requirements">요청사항 (자연어)</Label>
+              <Textarea
+                id="requirements"
+                name="requirements"
+                placeholder="예: 예상 사용자 수는 100명 정도이고, 피크 시간대는 오후 2시~4시입니다. 높은 가용성이 필요합니다."
+                value={formData.requirements}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
+                rows={4}
+                className="resize-none"
               />
+              <p className="text-xs text-muted-foreground">
+                프로젝트의 요구사항을 자연어로 입력해주세요. (예상 사용자 수, 피크 시간대, 성능 요구사항 등)
+              </p>
             </div>
             {error && (
               <Alert variant="destructive">
