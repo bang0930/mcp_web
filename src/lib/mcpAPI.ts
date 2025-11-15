@@ -84,3 +84,96 @@ export const mcpApi = {
     return handleResponse(res);
   }
 };
+
+export interface Project {
+  id: number;
+  name: string;
+  repository: string;
+  status: "deployed" | "building" | "error" | "stopped";
+  lastDeployment: string | null;
+  url: string | null;
+  service_id: string | null;
+  instance_id: string | null;
+}
+
+export interface ProjectsResponse {
+  projects: Project[];
+}
+
+export const projectsApi = {
+  // 프로젝트 목록 조회
+  getProjects: async (token: string): Promise<ProjectsResponse> => {
+    const res = await fetch(`${API_BASE_URL}/projects`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return handleResponse(res);
+  },
+
+  // 프로젝트 생성
+  createProject: async (projectData: {
+    name: string;
+    repository: string;
+  }, token: string): Promise<Project> => {
+    const res = await fetch(`${API_BASE_URL}/projects`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(projectData)
+    });
+    return handleResponse(res);
+  },
+
+  // 프로젝트 상세 조회
+  getProject: async (projectId: number, token: string): Promise<Project> => {
+    const res = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return handleResponse(res);
+  },
+
+  // 프로젝트 업데이트
+  updateProject: async (
+    projectId: number,
+    projectData: {
+      name?: string;
+      repository?: string;
+      status?: "deployed" | "building" | "error" | "stopped";
+      url?: string;
+      service_id?: string;
+      instance_id?: string;
+    },
+    token: string
+  ): Promise<Project> => {
+    const res = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(projectData)
+    });
+    return handleResponse(res);
+  },
+
+  // 프로젝트 삭제
+  deleteProject: async (projectId: number, token: string): Promise<void> => {
+    const res = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || errorData.message || '프로젝트 삭제에 실패했습니다.');
+    }
+  }
+};

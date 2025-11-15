@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/contexts/AuthContext"
-import { authApi } from "@/lib/authAPI"
+import { authApi, UserProfile } from "@/lib/authAPI"
 import { useToast } from "@/hooks/use-toast"
 import { 
   User, 
@@ -29,10 +29,7 @@ import {
   Palette,
   Save,
   Trash2,
-  Key,
-  Mail,
-  Slack,
-  Github
+  Key
 } from "lucide-react"
 
 export default function Settings() {
@@ -41,6 +38,34 @@ export default function Settings() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // 프로필 정보 로드
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!state.token) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const profileData = await authApi.getProfile(state.token)
+        setProfile(profileData)
+      } catch (err: any) {
+        toast({
+          title: "프로필 로드 실패",
+          description: err.message || "프로필 정보를 불러오는데 실패했습니다.",
+          variant: "destructive"
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [state.token, toast])
+
 
   const handleDeleteAccount = async () => {
     if (!state.token) {
@@ -99,69 +124,41 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" defaultValue="John" />
+                {isLoading ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">프로필 정보를 불러오는 중...</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" defaultValue="Developer" />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" defaultValue="developer@LaunchA.cloud" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input id="company" defaultValue="LaunchA Technologies" />
-                </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={profile?.email || ""}
+                        disabled
+                        className="bg-muted"
+                      />
+                      <p className="text-xs text-muted-foreground">이메일은 변경할 수 없습니다.</p>
+                    </div>
 
-                <Button variant="hero">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
+                    {profile && (
+                      <div className="space-y-2">
+                        <Label>가입일</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(profile.created_at).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Github className="h-5 w-5" />
-                  Connected Accounts
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Github className="h-5 w-5" />
-                    <div>
-                      <p className="font-medium">GitHub</p>
-                      <p className="text-sm text-muted-foreground">john-developer</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Disconnect
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border border-dashed border-border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Slack className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-muted-foreground">Slack</p>
-                      <p className="text-sm text-muted-foreground">Not connected</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Connect
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">

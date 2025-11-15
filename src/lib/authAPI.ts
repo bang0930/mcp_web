@@ -16,6 +16,12 @@ const handleResponse = async (res: Response) => {
   return res.json();
 };
 
+export interface UserProfile {
+  email: string;
+  github_repo_url: string | null;
+  created_at: string;
+}
+
 export const authApi = {
   login: async (email: string, password: string) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -35,10 +41,21 @@ export const authApi = {
     return handleResponse(res);
   },
 
+  // 유저 프로필 조회
+  getProfile: async (token: string): Promise<UserProfile> => {
+    const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return handleResponse(res);
+  },
+
   // 프로젝트 정보 업데이트 (사용자 정보 업데이트)
-  updateProject: async (projectData: {
-    github_repo_url: string;
-    requirements: string;
+  updateProfile: async (projectData: {
+    github_repo_url?: string;
+    requirements?: string;
   }, token: string) => {
     const res = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PUT',
