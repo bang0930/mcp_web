@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { mcpApi } from "@/lib/mcpAPI"
+import { backendApi } from "@/lib/backendAPI"
 import { authApi } from "@/lib/authAPI"
 import { CreateProjectDialog, ProjectData } from "@/components/CreateProjectDialog"
 import { MetricCard } from "@/components/metric-card"
@@ -23,47 +24,53 @@ export default function Predict() {
     try {
       // 1. 프로젝트 정보를 사용자 프로필에 저장
       try {
-        await authApi.updateProject(projectData, state.token)
+        await authApi.updateProfile(
+          {
+            github_repo_url: projectData.github_repo_url,
+            requirements: projectData.requirements,
+          },
+          state.token
+        )
       } catch (apiError: any) {
         // API가 없으면 로컬 스토리지에 저장
         localStorage.setItem("project_data", JSON.stringify(projectData))
       }
 
-      // 2. Context JSON 생성
-      // 프론트엔드에서는 GitHub URL만 전달하고, 나머지 context 필드들은 MCP가 채움
+      // 2. service_id 생성 (로깅/추적용)
       const serviceId = `svc-${Date.now()}`
 
-      // 최소한의 Context 정보만 전달 (MCP가 나머지를 채움)
-      const context = {
-        github_url: projectData.github_repo_url, // 필수: GitHub URL
-        // 나머지 필드들(timestamp, service_type, runtime_env, time_slot, weight, expected_users 등)은 MCP가 채움
-      }
+      // 3. backend_api에 자연어 + GitHub URL 전달 → /api/predict 호출
+      const predictResponse = await backendApi.predictWithNaturalLanguage({
+        github_url: projectData.github_repo_url,
+        user_input: projectData.requirements,
+      })
 
-      // 3. MCP API로 Context JSON 전송 (예측 요청)
-      // 자연어 요청사항은 별도 필드로 전송
-      const payload = {
-        service_id: serviceId,
-        metric_name: "cpu_usage",
-        context: context,
-        requirements: projectData.requirements, // 자연어 요청사항 (string으로 래핑)
-      }
-
-      // Context JSON을 예쁘게 포장해서 MCP로 전송
-      const planResponse = await mcpApi.sendContextToMCP(payload, state.token)
-
-      // 4. 배포 요청
+      // 4. MCP Core Deploy 서버에 배포 요청
+      // DeployRequest 스키마에 맞게 JSON 구성
       const deployData = {
-        service_id: serviceId,
-        repo_id: projectData.github_repo_url, // GitHub URL을 repo_id로 사용
+        github_url: projectData.github_repo_url,
+        repo_id: projectData.github_repo_url.split("/").pop() || projectData.github_repo_url,
         image_tag: "latest",
-        env_config: {},
+        env_config: {
+          service_id: serviceId,
+          // backend_api 예측 결과 일부를 메타데이터로 넘길 수 있음 (옵션)
+          recommendations: predictResponse?.recommendations ?? null,
+        },
       }
 
       const deployResponse = await mcpApi.deploy(deployData, state.token)
       
+      const flavor = predictResponse?.recommendations?.flavor
+      const cost = predictResponse?.recommendations?.cost_per_day
+
       toast({
-        title: "프로젝트 생성 및 배포 완료",
-        description: `프로젝트 정보가 MCP로 전송되었고 배포가 시작되었습니다. Instance ID: ${deployResponse.instance_id || "N/A"}`,
+        title: "예측 및 배포가 시작되었습니다",
+        description: [
+          flavor && cost
+            ? `추천 스펙: ${flavor} (예상 비용: $${cost}/day)`
+            : "자연어 요구사항을 기반으로 리소스를 예측했습니다.",
+          `VM 배포를 진행 중입니다. Instance ID: ${deployResponse.instance_id || "할당 대기 중"}`,
+        ].join(" "),
       })
     } catch (err: any) {
       throw new Error(err.message || "프로젝트 생성에 실패했습니다.")

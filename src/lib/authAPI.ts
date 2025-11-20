@@ -52,11 +52,14 @@ export const authApi = {
     return handleResponse(res);
   },
 
-  // 프로젝트 정보 업데이트 (사용자 정보 업데이트)
-  updateProfile: async (projectData: {
-    github_repo_url?: string;
-    requirements?: string;
-  }, token: string) => {
+  // 프로젝트/프로필 정보 업데이트 (GitHub URL, 자연어 요구사항 등)
+  updateProfile: async (
+    projectData: {
+      github_repo_url?: string;
+      requirements?: string;
+    },
+    token: string
+  ) => {
     const res = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PUT',
       headers: {

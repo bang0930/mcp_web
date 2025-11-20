@@ -65,9 +65,10 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>새 프로젝트 생성</DialogTitle>
+          <DialogTitle>새 프로젝트 생성 및 자동 배포</DialogTitle>
           <DialogDescription>
-            프로젝트 정보를 입력하여 예측 서비스를 시작하세요
+            GitHub 저장소 URL과 자연어로 요구사항을 입력하면,
+            리소스 예측부터 VM 배포까지 한 번에 진행됩니다.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -86,7 +87,7 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="requirements">요청사항</Label>
+              <Label htmlFor="requirements">요청사항 (자연어)</Label>
               <Textarea
                 id="requirements"
                 name="requirements"
@@ -99,7 +100,8 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
                 className="resize-none"
               />
               <p className="text-xs text-muted-foreground">
-                프로젝트의 요구사항을 자연어로 입력해주세요. (예상 사용자 수, 피크 시간대, 성능 요구사항 등)
+                GitHub 서비스의 사용 패턴과 성능 요구사항을 자연어로 적어주세요.
+                (예: 예상 사용자 수, 피크 시간대, 가용성/성능 요구 등)
               </p>
             </div>
             {error && (

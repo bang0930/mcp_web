@@ -50,18 +50,20 @@ export const mcpApi = {
     return handleResponse(res);
   },
 
-  // 배포 요청 (8001 포트 사용)
+  // 배포 요청 (MCP Core DeployRequest 스키마에 맞춤)
+  // DeployRequest (백엔드): github_url, repo_id?, image_tag?, plan_id?, env_config
   deploy: async (deployData: {
-    service_id: string;
+    github_url: string;
     repo_id?: string;
     image_tag?: string;
+    plan_id?: string;
     env_config?: Record<string, any>;
-  }, token: string) => {
+  }, token?: string) => {
     const res = await fetch(`${DEPLOY_API_BASE_URL}/deploy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(deployData)
     });
