@@ -4,15 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -23,16 +14,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { useAuth } from "@/contexts/AuthContext"
 import { mcpApi } from "@/lib/mcpAPI"
 import { projectsApi, Project } from "@/lib/mcpAPI"
 import { useToast } from "@/hooks/use-toast"
 import { 
-  Plus, 
   Search, 
   Github, 
-  Settings, 
   Eye, 
   ExternalLink,
   Calendar,
@@ -41,41 +37,57 @@ import {
   Clock,
   AlertTriangle,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Globe
 } from "lucide-react"
-import { Link } from "react-router-dom"
+
+// 목 데이터: 테스트용 프로젝트
+const mockProject: Project = {
+  id: 1,
+  name: "My Awesome Project",
+  repository: "https://github.com/username/my-awesome-project",
+  status: "deployed",
+  lastDeployment: new Date().toISOString(),
+  url: "https://my-awesome-project.example.com",
+  service_id: "svc-12345",
+  instance_id: "inst-67890"
+}
 
 export default function Projects() {
   const { state } = useAuth()
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [newProject, setNewProject] = useState({ name: "", repository: "" })
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([mockProject]) // 목 데이터로 초기화
+  const [isLoading, setIsLoading] = useState(false) // 목 데이터 사용 시 로딩 불필요
   const [isDeleting, setIsDeleting] = useState<number | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
 
   // 프로젝트 목록 로드
   const loadProjects = async () => {
-    if (!state.token) {
-      setIsLoading(false)
-      return
-    }
+    // 목 데이터 사용 중 (테스트용)
+    setProjects([mockProject])
+    setIsLoading(false)
+    
+    // 실제 API 호출 (주석 처리됨)
+    // if (!state.token) {
+    //   setIsLoading(false)
+    //   return
+    // }
 
-    setIsLoading(true)
-    try {
-      const response = await projectsApi.getProjects(state.token)
-      setProjects(response.projects)
-    } catch (err: any) {
-      toast({
-        title: "프로젝트 로드 실패",
-        description: err.message || "프로젝트 목록을 불러오는데 실패했습니다.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    // setIsLoading(true)
+    // try {
+    //   const response = await projectsApi.getProjects(state.token)
+    //   setProjects(response.projects)
+    // } catch (err: any) {
+    //   toast({
+    //     title: "프로젝트 로드 실패",
+    //     description: err.message || "프로젝트 목록을 불러오는데 실패했습니다.",
+    //     variant: "destructive"
+    //   })
+    // } finally {
+    //   setIsLoading(false)
+    // }
   }
 
   useEffect(() => {
@@ -114,55 +126,6 @@ export default function Projects() {
         return <Badge variant="secondary">Stopped</Badge>
       default:
         return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  const handleCreateProject = async () => {
-    if (!state.token) {
-      toast({
-        title: "오류",
-        description: "인증 토큰이 없습니다. 다시 로그인해주세요.",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (!newProject.name || !newProject.repository) {
-      toast({
-        title: "입력 오류",
-        description: "프로젝트 이름과 GitHub Repository URL을 입력해주세요.",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setIsCreating(true)
-    try {
-      await projectsApi.createProject(
-        {
-          name: newProject.name,
-          repository: newProject.repository
-        },
-        state.token
-      )
-      
-      toast({
-        title: "프로젝트 생성 완료",
-        description: `${newProject.name} 프로젝트가 성공적으로 생성되었습니다.`,
-      })
-      
-      setIsCreateDialogOpen(false)
-      setNewProject({ name: "", repository: "" })
-      // 프로젝트 목록 새로고침
-      await loadProjects()
-    } catch (err: any) {
-      toast({
-        title: "프로젝트 생성 실패",
-        description: err.message || "프로젝트 생성에 실패했습니다.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsCreating(false)
     }
   }
 
@@ -236,57 +199,6 @@ export default function Projects() {
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="hero" className="shadow-glow">
-              <Plus className="mr-2 h-4 w-4" />
-              New Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
-              <DialogDescription>
-                Add a new project to start automated deployments from your GitHub repository.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Project Name</Label>
-                <Input
-                  id="name"
-                  placeholder="my-awesome-project"
-                  value={newProject.name}
-                  onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="repository">GitHub Repository URL</Label>
-                <Input
-                  id="repository"
-                  placeholder="https://github.com/username/repository"
-                  value={newProject.repository}
-                  onChange={(e) => setNewProject(prev => ({ ...prev, repository: e.target.value }))}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsCreateDialogOpen(false)}
-                disabled={isCreating}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateProject}
-                disabled={!newProject.name || !newProject.repository || isCreating}
-              >
-                {isCreating ? "생성 중..." : "Create Project"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
         </div>
       </div>
 
@@ -359,18 +271,117 @@ export default function Projects() {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild className="flex-1">
-                  <Link to={`/projects/${project.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Details
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild className="flex-1">
-                  <Link to={`/projects/${project.id}/settings`}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </Button>
+                <Dialog 
+                  open={isDetailDialogOpen && selectedProject?.id === project.id} 
+                  onOpenChange={(open) => {
+                    setIsDetailDialogOpen(open)
+                    if (!open) setSelectedProject(null)
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedProject(project)
+                        setIsDetailDialogOpen(true)
+                      }}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Details
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>프로젝트 상세 정보</DialogTitle>
+                      <DialogDescription>
+                        {project.name} 프로젝트의 상세 정보를 확인합니다.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      {/* 프로젝트 기본 정보 */}
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">프로젝트 이름</p>
+                          <p className="text-foreground">{project.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+                            <Github className="h-4 w-4" />
+                            GitHub Repository
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={project.repository}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline truncate"
+                            >
+                              {project.repository}
+                            </a>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">배포 상태</p>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(project.status)}
+                            {getStatusBadge(project.status)}
+                          </div>
+                        </div>
+                        {project.url && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+                              <Globe className="h-4 w-4" />
+                              배포 URL
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={project.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline truncate"
+                              >
+                                {project.url}
+                              </a>
+                              <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                          </div>
+                        )}
+                        {project.service_id && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Service ID</p>
+                            <p className="text-foreground font-mono text-sm">{project.service_id}</p>
+                          </div>
+                        )}
+                        {project.instance_id && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Instance ID</p>
+                            <p className="text-foreground font-mono text-sm">{project.instance_id}</p>
+                          </div>
+                        )}
+                        {project.lastDeployment && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              마지막 배포일
+                            </p>
+                            <p className="text-foreground">
+                              {new Date(project.lastDeployment).toLocaleString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="pt-2 border-t border-border">
@@ -422,14 +433,8 @@ export default function Projects() {
             No projects found
           </h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery ? "Try adjusting your search terms" : "Get started by creating your first project"}
+            {searchQuery ? "Try adjusting your search terms" : "프로젝트가 없습니다. 대시보드에서 프로젝트를 생성해주세요."}
           </p>
-          {!searchQuery && (
-            <Button variant="hero" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Project
-            </Button>
-          )}
         </div>
       )}
     </div>
