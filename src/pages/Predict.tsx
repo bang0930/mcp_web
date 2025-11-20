@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { mcpApi } from "@/lib/mcpAPI"
 import { backendApi } from "@/lib/backendAPI"
-import { authApi } from "@/lib/authAPI"
 import { CreateProjectDialog, ProjectData } from "@/components/CreateProjectDialog"
+import { DeploymentSummaryDialog, DeploymentSummaryData } from "@/components/DeploymentSummaryDialog"
 import { MetricCard } from "@/components/metric-card"
 import { ActivityLog } from "@/components/activity-log"
 import { ResourceChart } from "@/components/resource-chart"
@@ -15,6 +15,8 @@ export default function Predict() {
   const { state } = useAuth()
   const { toast } = useToast()
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
+  const [deploymentSummary, setDeploymentSummary] = useState<DeploymentSummaryData | null>(null)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
 
   const handleCreateProject = async (projectData: ProjectData) => {
     if (!state.token) {
@@ -48,17 +50,26 @@ export default function Predict() {
       }
 
       const deployResponse = await mcpApi.deploy(deployData, state.token)
+      const summaryPayload: DeploymentSummaryData = {
+        githubUrl: projectData.github_repo_url,
+        serviceId,
+        predictResult: predictResponse,
+        deployResult: deployResponse,
+      }
+      setDeploymentSummary(summaryPayload)
+      setIsSummaryOpen(true)
       
       const flavor = predictResponse?.recommendations?.flavor
       const cost = predictResponse?.recommendations?.cost_per_day
+      const instanceLabel = deployResponse.instance?.name || deployResponse.instance_id || "할당 대기 중"
 
       toast({
-        title: "예측 및 배포가 시작되었습니다",
+        title: "예측 및 배포가 완료되었습니다",
         description: [
           flavor && cost
             ? `추천 스펙: ${flavor} (예상 비용: $${cost}/day)`
             : "자연어 요구사항을 기반으로 리소스를 예측했습니다.",
-          `VM 배포를 진행 중입니다. Instance ID: ${deployResponse.instance_id || "할당 대기 중"}`,
+          `생성된 VM: ${instanceLabel}. 세부 정보는 요약 창에서 확인하세요.`,
         ].join(" "),
       })
     } catch (err: any) {
@@ -158,6 +169,19 @@ export default function Predict() {
         onOpenChange={setIsProjectDialogOpen}
         onSubmit={handleCreateProject}
       />
+
+      {deploymentSummary && (
+        <DeploymentSummaryDialog
+          open={isSummaryOpen}
+          onOpenChange={(open) => {
+            setIsSummaryOpen(open)
+            if (!open) {
+              setDeploymentSummary(null)
+            }
+          }}
+          data={deploymentSummary}
+        />
+      )}
     </div>
   )
 }

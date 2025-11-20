@@ -2,6 +2,38 @@
 
 import { API_BASE_URL, DEPLOY_API_BASE_URL } from './config';
 
+export interface InstanceAddressEntry {
+  addr?: string;
+  type?: string;
+  version?: number;
+  ['OS-EXT-IPS:type']?: string;
+  [key: string]: any;
+}
+
+export type InstanceAddresses = Record<string, InstanceAddressEntry[]>;
+
+export interface InstanceInfo {
+  instance_id: string;
+  name: string;
+  image_name: string;
+  flavor_name: string;
+  network_name: string;
+  key_name: string;
+  metadata?: Record<string, string> | null;
+  user_data?: string | null;
+  status: string;
+  addresses: InstanceAddresses;
+}
+
+export interface DeployResponse {
+  accepted: boolean;
+  plan_id?: string | null;
+  instance_id?: string | null;
+  instance?: InstanceInfo | null;
+  message: string;
+  deployed_at?: string | null;
+}
+
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
     let errorMessage = '예측 요청에 실패했습니다.';
@@ -58,7 +90,7 @@ export const mcpApi = {
     image_tag?: string;
     plan_id?: string;
     env_config?: Record<string, any>;
-  }, token?: string) => {
+  }, token?: string): Promise<DeployResponse> => {
     const res = await fetch(`${DEPLOY_API_BASE_URL}/deploy`, {
       method: 'POST',
       headers: {
@@ -67,7 +99,8 @@ export const mcpApi = {
       },
       body: JSON.stringify(deployData)
     });
-    return handleResponse(res);
+    const data: DeployResponse = await handleResponse(res);
+    return data;
   },
 
   // 리소스 삭제
