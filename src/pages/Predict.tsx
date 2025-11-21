@@ -44,8 +44,10 @@ export default function Predict() {
         image_tag: "latest",
         env_config: {
           service_id: serviceId,
-          // backend_api 예측 결과 일부를 메타데이터로 넘길 수 있음 (옵션)
+          // backend_api 예측 결과를 그대로 전달하여 Deploy 단계에서 재사용
+          recommended_flavor: predictResponse?.recommendations?.flavor ?? null,
           recommendations: predictResponse?.recommendations ?? null,
+          extracted_context: predictResponse?.extracted_context ?? null,
         },
       }
 
