@@ -15,10 +15,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Secret이 실제로 들어오는지 먼저 체크
+      - name: Check MIRROR_PAT is set
+        env:
+          MIRROR_PAT: ${{ secrets.MIRROR_PAT }}
+        run: |
+          if [ -z "${MIRROR_PAT}" ]; then
+            echo "❌ MIRROR_PAT is EMPTY"
+            exit 1
+          else
+            echo "✅ MIRROR_PAT is SET"
+          fi
+
       - name: Push to mirror repo
         env:
           MIRROR_PAT: ${{ secrets.MIRROR_PAT }}
         run: |
-          export MIRROR_URL="https://x-access-token:${MIRROR_PAT}@github.com/bang0930/mcp_web_sync.git"
-          git remote add mirror "$MIRROR_URL"
+          # 여기서 PAT을 명시적으로 username:token 형태로 쓴다
+          git remote add mirror "https://bang0930:${MIRROR_PAT}@github.com/bang0930/mcp_web_sync.git"
           git push mirror HEAD:main
