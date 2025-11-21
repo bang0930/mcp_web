@@ -1,0 +1,39 @@
+# name: Sync to mirror on main push
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   sync:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout org repo
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#           persist-credentials: false  # 🔑 이게 핵심!
+      
+#       - name: Check MIRROR_PAT is set
+#         env:
+#           MIRROR_PAT: ${{ secrets.MIRROR_PAT }}
+#         run: |
+#           if [ -z "${MIRROR_PAT}" ]; then
+#             echo "❌ MIRROR_PAT is EMPTY"
+#             exit 1
+#           else
+#             echo "✅ MIRROR_PAT is SET"
+#           fi
+      
+#       - name: Configure Git
+#         run: |
+#           git config --global user.name "github-actions[bot]"
+#           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
+#       - name: Push to mirror repo
+#         env:
+#           MIRROR_PAT: ${{ secrets.MIRROR_PAT }}
+#         run: |
+#           git remote add mirror "https://bang0930:${MIRROR_PAT}@github.com/bang0930/mcp_web_sync.git"
+#           git push mirror HEAD:main --force
