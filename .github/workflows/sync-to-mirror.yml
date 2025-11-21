@@ -1,0 +1,24 @@
+name: Sync to mirror on main push
+
+on:
+  push:
+    branches:
+      - main   # main에 커밋/머지될 때마다 동작
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout org repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 전체 히스토리 (강제 push 시 필요할 수 있음)
+
+      - name: Push to mirror repo
+        env:
+          MIRROR_URL: https://x-access-token:${{ secrets.MIRROR_PAT }}@github.com/bang0930/mcp_web_sync.git
+        run: |
+          git remote add mirror "$MIRROR_URL"
+          # 필요에 따라 --force 붙일지 결정 (히스토리 완전 동일하게 맞추고 싶으면 --force)
+          git push mirror main:main
