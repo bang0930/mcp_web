@@ -44,8 +44,8 @@ import {
 const MOCK_PROJECTS: Project[] = [
   {
     id: 101,
-    name: "Smart Retail Assistant",
-    repository: "https://github.com/launcha/smart-retail-assistant",
+    name: "fastapi",
+    repository: "https://github.com/fastapi/fastapi",
     status: "deployed",
     lastDeployment: "2025-11-20T09:30:00Z",
     url: "https://retail.launcha.cloud",
